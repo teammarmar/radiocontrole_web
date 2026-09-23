@@ -49,21 +49,32 @@ body{
 #couper{display:none}
 #statut.ok #couper{display:block}
 
-/* ---------- instrument ---------- */
-#instrument{
-  flex:1 1 auto;min-height:0;background:var(--abysse);
-  display:flex;align-items:center;justify-content:center;padding:6px 10px 0;
+/* ---------- mesures électriques ---------- */
+#mesures{
+  --t:60px;
+  flex:1 1 0;min-height:0;overflow:hidden;background:var(--abysse);
+  display:flex;flex-direction:column;justify-content:center;
+  padding:2px 18px 4px;
 }
-#instrument svg{width:100%;height:100%;max-height:100%}
-#arc{stroke:var(--ecume);stroke-width:2;fill:none;opacity:.85}
-.tick{stroke:var(--ecume);stroke-width:1.7;opacity:.68}
-.tickmaj{stroke:var(--ecume);stroke-width:3.6}
-.grad{font-size:17px;font-weight:600;fill:var(--ecume);text-anchor:middle;opacity:.85}
-#bras{transition:transform .1s linear;transform-box:view-box;transform-origin:210px 208px}
-#aiguille{stroke:var(--ecume);stroke-width:11;stroke-linecap:butt}
-#pivot{fill:var(--ecume)}
-#valeur{font-size:78px;font-weight:800;text-anchor:middle;fill:var(--ecume);font-variant-numeric:tabular-nums}
-#bord{font-size:19px;font-weight:600;text-anchor:middle;fill:var(--brume)}
+.lig{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:calc(var(--t)*.13) 0;
+  border-bottom:1px solid rgba(238,242,247,.16);
+}
+.lig:nth-child(3){border-bottom:none}
+.nom{display:flex;flex-direction:column;gap:calc(var(--t)*.07);font-size:clamp(13px,calc(var(--t)*.25),17px);font-weight:600;color:var(--brume)}
+.nom em{font-style:normal;font-size:max(14px,calc(var(--t)*.31));white-space:nowrap}
+.nom em b{font-weight:800;color:var(--ecume);font-variant-numeric:tabular-nums}
+#mesures.perime .nom em b{color:var(--brume);opacity:.5}
+.val{white-space:nowrap;text-align:right}
+.val b{
+  font-size:var(--t);font-weight:800;line-height:1;
+  font-variant-numeric:tabular-nums;color:var(--ecume);letter-spacing:-.01em;
+}
+.val small{font-size:max(13px,calc(var(--t)*.42));font-weight:600;color:var(--brume);margin-left:7px}
+#etatMes{text-align:center;font-size:13px;font-weight:600;color:var(--brume);padding-top:5px;min-height:23px}
+#etatMes.alerte{color:var(--babord)}
+#mesures.perime .val b{color:var(--brume);opacity:.5}
 
 /* ---------- réglages ---------- */
 #reglages{flex:1 1 auto;min-height:0;overflow-y:auto;padding:18px 16px;background:var(--abysse)}
@@ -77,7 +88,7 @@ body{
   border:1.5px solid rgba(238,242,247,.45);border-radius:2px;cursor:pointer;
 }
 .rcmd button:active{background:var(--ecume);color:var(--abysse)}
-#sensB{width:auto;padding:0 16px;font-size:15px}
+#sensB,#razMax{width:auto;padding:0 16px;font-size:15px}
 .rcmd b{font-size:19px;font-weight:800;min-width:54px;text-align:center;font-variant-numeric:tabular-nums}
 #reglages p{font-size:13px;line-height:1.5;color:var(--brume);margin:18px 0 20px;border-top:1px solid rgba(238,242,247,.16);padding-top:16px}
 #fermer{
@@ -98,10 +109,12 @@ body{
 #app.vif #mer{animation-play-state:running}
 @keyframes derive{to{background-position:100px 0}}
 @media (prefers-reduced-motion:reduce){#mer{animation:none}}
-#app.hs #instrument{opacity:.7}
+#app.hs #mesures{opacity:.7}
 #app.hs #mer{filter:saturate(.25) brightness(.88)}
 
-#reperes{display:flex;justify-content:space-between;margin:0 2px 8px;font-size:12.5px;font-weight:600;color:var(--ecume);text-shadow:0 1px 3px rgba(10,25,45,.9)}
+#reperes{display:flex;justify-content:space-between;align-items:baseline;margin:0 2px 8px;font-size:12.5px;font-weight:600;color:var(--ecume);text-shadow:0 1px 3px rgba(10,25,45,.9)}
+
+#angleV{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;min-width:86px;text-align:center}
 
 /* ---------- barre ---------- */
 #barre{-webkit-appearance:none;appearance:none;width:100%;height:78px;background:transparent;display:block;touch-action:none}
@@ -111,16 +124,20 @@ body{
 #barre::-moz-range-thumb{width:56px;height:78px;background:var(--ecume);border:2px solid var(--mer);border-radius:2px}
 #barre:focus-visible{outline:3px solid var(--ecume);outline-offset:5px}
 
-#trimrow{display:grid;grid-template-columns:78px 1fr 78px;gap:10px;margin-top:12px}
-#trimrow button{
-  font:inherit;font-weight:600;height:52px;
-  background:rgba(14,35,56,.85);color:var(--ecume);
-  border:1.5px solid rgba(238,242,247,.55);border-radius:2px;cursor:pointer;
+#trimrow{
+  flex:0 0 auto;display:grid;grid-template-columns:76px 1fr 76px;gap:9px;
+  padding:10px 14px;background:var(--abysse);
+  border-bottom:1px solid rgba(238,242,247,.2);
 }
-#trimrow button:active{background:var(--ecume);color:var(--mer)}
-#trimrow .tr{font-size:26px;line-height:1}
-#trimVal{font-size:16px;font-variant-numeric:tabular-nums}
-#trimVal.actif{border-color:var(--ecume);background:rgba(238,242,247,.2);font-weight:800}
+#trimrow button{
+  font:inherit;font-weight:600;height:46px;
+  background:rgba(238,242,247,.06);color:var(--ecume);
+  border:1.5px solid rgba(238,242,247,.42);border-radius:2px;cursor:pointer;
+}
+#trimrow button:active{background:var(--ecume);color:var(--abysse)}
+#trimrow .tr{font-size:24px;line-height:1}
+#trimVal{font-size:15.5px;font-variant-numeric:tabular-nums}
+#trimVal.actif{border-color:var(--ecume);background:rgba(238,242,247,.18);font-weight:800}
 
 #milieu{
   width:100%;margin-top:12px;padding:18px;font:inherit;font-size:19px;font-weight:600;
@@ -136,6 +153,19 @@ body{
 .mes b{display:block;font-size:23px;font-weight:800;color:var(--ecume);font-variant-numeric:tabular-nums;line-height:1.1}
 .mes span{font-size:11.5px;color:var(--brume)}
 #alerte{grid-column:1/-1;padding:9px 12px;font-size:13px;font-weight:600;color:var(--babord);border-top:1px solid rgba(238,242,247,.16);display:none}
+/* ---------- petits écrans : on compacte les commandes pour garder les mesures lisibles ---------- */
+@media (max-height:660px){
+  #statut{min-height:50px;padding:7px 12px}
+  #trimrow{padding:6px 12px}
+  #trimrow button{height:38px}
+  #mer{padding:9px 14px 9px}
+  #reperes{margin-bottom:5px}
+  #barre,#barre::-webkit-slider-runnable-track,#barre::-moz-range-track{height:60px}
+  #barre::-webkit-slider-thumb,#barre::-moz-range-thumb{height:60px}
+  #milieu{margin-top:8px;padding:11px;font-size:17px}
+  .mes{padding:4px 10px 5px}
+  .mes b{font-size:18px}
+}
 </style>
 </head>
 <body>
@@ -148,15 +178,17 @@ body{
     <button id="couper" type="button">Couper</button>
   </div>
 
-  <div id="instrument">
-    <svg viewBox="0 0 420 250" aria-hidden="true">
-      <path id="arc"/>
-      <g id="ticks"></g><g id="grads"></g>
-      <g id="bras"><line id="aiguille" x1="210" y1="208" x2="210" y2="70"/></g>
-      <circle id="pivot" cx="210" cy="208" r="8"/>
-      <text id="valeur" x="210" y="196">0°</text>
-      <text id="bord" x="210" y="228">barre au milieu</text>
-    </svg>
+  <div id="trimrow">
+    <button class="tr" id="trimM" type="button" aria-label="Trim bâbord">−</button>
+    <button id="trimVal" type="button">Trim 0°</button>
+    <button class="tr" id="trimP" type="button" aria-label="Trim tribord">+</button>
+  </div>
+
+  <div id="mesures" class="perime">
+    <div class="lig"><span class="nom">Tension<em>max <b id="xU">—</b> V</em></span><span class="val"><b id="vU">—</b><small>V</small></span></div>
+    <div class="lig"><span class="nom">Courant<em>max <b id="xI">—</b> A</em></span><span class="val"><b id="vI">—</b><small>A</small></span></div>
+    <div class="lig"><span class="nom">Puissance<em>max <b id="xP">—</b> W</em></span><span class="val"><b id="vP">—</b><small>W</small></span></div>
+    <div id="etatMes">Bateau non connecté</div>
   </div>
 
   <div id="reglages" hidden>
@@ -173,18 +205,17 @@ body{
       <span>Sens de la barre</span>
       <div class="rcmd"><button id="sensB" type="button">Normal</button></div>
     </div>
+    <div class="rlig">
+      <span>Maxima U, I, P</span>
+      <div class="rcmd"><button id="razMax" type="button">Remettre à zéro</button></div>
+    </div>
     <p>Le débattement limite la course dans l'application. La butée qui protège réellement la tringlerie reste MINI et MAXI dans le programme de la carte : c'est là qu'il faut aussi la régler.</p>
     <button id="fermer" type="button">Fermer</button>
   </div>
 
   <div id="mer">
-    <div id="reperes"><span id="repG">bâbord 45</span><span>0</span><span id="repD">45 tribord</span></div>
+    <div id="reperes"><span id="repG">bâbord 45</span><b id="angleV">0°</b><span id="repD">45 tribord</span></div>
     <input id="barre" type="range" min="-45" max="45" step="1" value="0" aria-label="Angle de barre">
-    <div id="trimrow">
-      <button class="tr" id="trimM" type="button" aria-label="Trim bâbord">−</button>
-      <button id="trimVal" type="button">Trim 0°</button>
-      <button class="tr" id="trimP" type="button" aria-label="Trim tribord">+</button>
-    </div>
     <button id="milieu" type="button">Barre au milieu</button>
   </div>
 
@@ -207,7 +238,8 @@ const SVC       = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 const PREFIXE   = "BBC micro:bit";
 const PERIODE   = 150;   // ms entre deux trames (~6,7 Hz)
 const NEUTRE    = 90;    // valeur servo au milieu
-const TRIM_MAX  = 5;     // amplitude du trim, en degrés
+const TRIM_MAX  = 6;     // amplitude du trim, en degrés
+const TRIM_PAS  = 2;     // incrément du trim
 const AMPLI_MAX = 45;    // débattement le plus large proposé
 const AMPLI_MIN = 10;
 const DETENT    = 2;     // aimantation au zéro
@@ -217,9 +249,9 @@ const SERVO_MAX = 135;   // doit correspondre à MAXI dans le micro:bit
 
 const enc=new TextEncoder(), $=s=>document.querySelector(s);
 const app=$("#app"),elSt=$("#statut"),elTxt=$("#txt"),elNom=$("#nom"),elPouls=$("#pouls"),
-      elCouper=$("#couper"),elRegl=$("#regl"),elPanneau=$("#reglages"),elInstr=$("#instrument"),
+      elCouper=$("#couper"),elRegl=$("#regl"),elPanneau=$("#reglages"),
       elFermer=$("#fermer"),elAlerte=$("#alerte"),
-      elBras=$("#bras"),elAig=$("#aiguille"),elPivot=$("#pivot"),elVal=$("#valeur"),elBord=$("#bord"),
+      angleV=$("#angleV"),elMes=$("#mesures"),vU=$("#vU"),vI=$("#vI"),vP=$("#vP"),xU=$("#xU"),xI=$("#xI"),xP=$("#xP"),etatMes=$("#etatMes"),razMax=$("#razMax"),
       barre=$("#barre"),milieu=$("#milieu"),
       trimM=$("#trimM"),trimP=$("#trimP"),trimVal=$("#trimVal"),
       ampM=$("#ampM"),ampP=$("#ampP"),ampV=$("#ampV"),sensB=$("#sensB"),
@@ -229,33 +261,16 @@ const app=$("#app"),elSt=$("#statut"),elTxt=$("#txt"),elNom=$("#nom"),elPouls=$(
 let device=null,chEcr=null,voulu=false,occupe=false;
 let angle=0,trim=0,ampli=45,sens=1;
 let nErr=0,nTr=0,durees=[],t0compte=performance.now();
+let tampon="",tConn=0,tMes=-1e9,tAbs=-1e9,nMes=0,freqMes=0,echMax=0,aZero=false;
+const dec=new TextDecoder();
 
 const lire=(k,d)=>{try{const v=parseInt(localStorage.getItem(k),10);return isFinite(v)?v:d;}catch(e){return d;}};
 const noter=(k,v)=>{try{localStorage.setItem(k,String(v));}catch(e){}};
 
-/* ---------- échelle de l'indicateur ---------- */
-function dessinerEchelle(A){
-  const CX=210,CY=208,R=150;
-  const pt=(a,r)=>[CX+r*Math.sin(a*Math.PI/180),CY-r*Math.cos(a*Math.PI/180)];
-  const pas = A>=20?5:2, maj = A>=30?15:(A>=20?10:5);
-  const [x0,y0]=pt(-A,R),[x1,y1]=pt(A,R);
-  $("#arc").setAttribute("d",`M ${x0.toFixed(1)} ${y0.toFixed(1)} A ${R} ${R} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`);
-  let t="",g="";
-  for(let a=-A;a<=A;a+=pas){
-    const gros=(a%maj===0),[xa,ya]=pt(a,R),[xb,yb]=pt(a,R-(gros?19:10));
-    t+=`<line class="${gros?"tickmaj":"tick"}" x1="${xa.toFixed(1)}" y1="${ya.toFixed(1)}" x2="${xb.toFixed(1)}" y2="${yb.toFixed(1)}"/>`;
-    if(gros){const [xc,yc]=pt(a,R-36);g+=`<text class="grad" x="${xc.toFixed(1)}" y="${(yc+6).toFixed(1)}">${Math.abs(a)}</text>`;}
-  }
-  $("#ticks").innerHTML=t;$("#grads").innerHTML=g;
-}
-
 /* ---------- affichage ---------- */
 function peindre(){
-  elBras.style.transform=`rotate(${angle}deg)`;
-  elVal.textContent=Math.abs(angle)+"\u00B0";
-  elBord.textContent = angle<0 ? "barre à bâbord" : angle>0 ? "barre à tribord" : "barre au milieu";
-  const c = angle<0?"var(--babord)":angle>0?"var(--tribord)":"var(--ecume)";
-  elAig.style.stroke=c; elPivot.style.fill=c;
+  angleV.textContent = angle<0 ? "\u25C2 "+(-angle)+"\u00B0" : angle>0 ? angle+"\u00B0 \u25B8" : "0\u00B0";
+  angleV.style.color = angle<0?"var(--babord)":angle>0?"var(--tribord)":"var(--ecume)";
 }
 function majStatut(t,ok,nom){
   elTxt.firstChild.nodeValue=t; elNom.textContent=nom||"";
@@ -276,13 +291,13 @@ milieu.addEventListener("click",()=>poser(0));
 
 /* ---------- trim ---------- */
 function poserTrim(v){
-  trim=Math.max(-TRIM_MAX,Math.min(TRIM_MAX,Math.round(v)));
+  trim=Math.max(-TRIM_MAX,Math.min(TRIM_MAX,Math.round(v/TRIM_PAS)*TRIM_PAS));
   noter("trim",trim);
   trimVal.textContent="Trim "+(trim>0?"+":"")+trim+"\u00B0";
   trimVal.classList.toggle("actif",trim!==0);
 }
-trimM.addEventListener("click",()=>poserTrim(trim-1));
-trimP.addEventListener("click",()=>poserTrim(trim+1));
+trimM.addEventListener("click",()=>poserTrim(trim-TRIM_PAS));
+trimP.addEventListener("click",()=>poserTrim(trim+TRIM_PAS));
 trimVal.addEventListener("click",()=>poserTrim(0));
 
 /* ---------- débattement et sens ---------- */
@@ -292,7 +307,6 @@ function poserAmpli(v){
   ampV.textContent=ampli+"\u00B0";
   barre.min=String(-ampli); barre.max=String(ampli);
   repG.textContent="bâbord "+ampli; repD.textContent=ampli+" tribord";
-  dessinerEchelle(ampli);
   poser(angle);
 }
 function poserSens(v){
@@ -306,7 +320,8 @@ sensB.addEventListener("click",()=>poserSens(-sens));
 
 function panneau(ouvert){
   elPanneau.hidden=!ouvert;
-  elInstr.style.display = ouvert?"none":"flex";
+  elMes.style.display = ouvert?"none":"flex";
+  if(!ouvert) ajusterMesures();
   elRegl.textContent = ouvert?"Fermer":"Réglages";
 }
 elRegl.addEventListener("click",()=>panneau(elPanneau.hidden));
@@ -316,8 +331,8 @@ document.addEventListener("keydown",e=>{
   if(e.key==="ArrowLeft"){poser(angle-2);e.preventDefault();}
   if(e.key==="ArrowRight"){poser(angle+2);e.preventDefault();}
   if(e.key===" "||e.key==="ArrowDown"){poser(0);e.preventDefault();}
-  if(e.key===","){poserTrim(trim-1);e.preventDefault();}
-  if(e.key==="."){poserTrim(trim+1);e.preventDefault();}
+  if(e.key===","){poserTrim(trim-TRIM_PAS);e.preventDefault();}
+  if(e.key==="."){poserTrim(trim+TRIM_PAS);e.preventDefault();}
 });
 
 /* ---------- connexion ---------- */
@@ -351,18 +366,24 @@ async function ouvrir(){
       try{ liste.push(await uart.getCharacteristic(u)); }catch(e){}
     }
   }
-  chEcr=liste.find(c=>c.properties&&(c.properties.writeWithoutResponse||c.properties.write));
-  if(!chEcr) throw new Error("aucune caractéristique en écriture sur ce service");
+  const ecr=liste.find(c=>c.properties&&(c.properties.writeWithoutResponse||c.properties.write));
+  if(!ecr) throw new Error("aucune caractéristique en écriture sur ce service");
 
+  // l'autre caractéristique (indication) porte les mesures envoyées par le bateau
   const ecoute=liste.find(c=>c.properties&&(c.properties.notify||c.properties.indicate));
-  if(ecoute){ try{ await ecoute.startNotifications(); }catch(e){} }
+  tampon=""; tConn=performance.now(); tMes=-1e9; tAbs=-1e9;
+  if(ecoute){
+    ecoute.addEventListener("characteristicvaluechanged",recevoir);
+    try{ await ecoute.startNotifications(); }catch(e){}
+  }
+  chEcr=ecr;   // l'émission des ordres démarre une fois l'écoute en place
 
   poser(0);
   majStatut("En pilotage",true,device.name||"");
   alerter("");
 }
 
-function perdu(){ chEcr=null; majStatut("Lien perdu — reconnexion…",false,device&&device.name); if(voulu) reconnecter(); }
+function perdu(){ chEcr=null; tMes=-1e9; majStatut("Lien perdu — reconnexion…",false,device&&device.name); if(voulu) reconnecter(); }
 async function reconnecter(){
   for(let i=0;i<900&&voulu;i++){
     if(device.gatt.connected&&chEcr) return;
@@ -371,7 +392,7 @@ async function reconnecter(){
   }
 }
 function couper(){
-  voulu=false; chEcr=null;
+  voulu=false; chEcr=null; tMes=-1e9;
   try{ if(device&&device.gatt.connected) device.gatt.disconnect(); }catch(e){}
   majStatut("Connecter le bateau",false);
 }
@@ -388,10 +409,12 @@ setInterval(async()=>{
   const t=performance.now();
   try{
     const servo=Math.max(SERVO_MIN,Math.min(SERVO_MAX,Math.round(NEUTRE+sens*(angle+trim))));
-    const d=enc.encode(String(servo).padStart(3,"0")+"\n");
+    const zero=aZero;
+    const d=enc.encode(zero ? "R\n" : String(servo).padStart(3,"0")+"\n");
     if(chEcr.properties.writeWithoutResponse&&chEcr.writeValueWithoutResponse)
       await chEcr.writeValueWithoutResponse(d);
     else await chEcr.writeValue(d);
+    if(zero) aZero=false;
     nTr++; durees.push(performance.now()-t); if(durees.length>20) durees.shift();
   }catch(e){
     nErr++; if(nErr%25===1) alerter("Écritures refusées ("+nErr+").");
@@ -402,11 +425,70 @@ setInterval(async()=>{
 /* ---------- compteurs ---------- */
 setInterval(()=>{
   const dt=(performance.now()-t0compte)/1000;
-  mHz.textContent=(nTr/dt).toFixed(1); nTr=0; t0compte=performance.now();
+  mHz.textContent=(nTr/dt).toFixed(1); nTr=0;
+  freqMes=nMes/dt; nMes=0; t0compte=performance.now();
   mMs.textContent=durees.length?Math.round(durees.reduce((a,b)=>a+b,0)/durees.length):"\u2014";
   mErr.textContent=nErr;
   elPouls.classList.add("bat"); setTimeout(()=>elPouls.classList.remove("bat"),170);
 },1000);
+
+/* ---------- mesures du bateau ---------- */
+// trame reçue : M<mV>,<mA>,<mW>,<mV max>,<mA max>,<mW max>,<échantillons/s>
+// (valeurs instantanées sans lissage ; maxima tenus par la carte) ou E si capteur absent
+function fr(x,d){ const s=Math.abs(x).toFixed(d); return (x<0&&Number(s)!==0?"\u2212":"")+s.replace(".",","); }
+function viderMesures(){ vU.textContent=vI.textContent=vP.textContent=xU.textContent=xI.textContent=xP.textContent="\u2014"; }
+function ligneRecue(l){
+  l=l.trim();
+  if(l==="E"){ tAbs=performance.now(); tMes=-1e9; return; }   // capteur absent : on efface tout de suite
+  if(l[0]!=="M") return;
+  const p=l.slice(1).split(",");
+  if((p.length!==3&&p.length!==7)||!p.every(s=>/^-?\d+$/.test(s))) return;
+  const n=p.map(Number), w=x=>fr(x/1000,Math.abs(x)>=100000?1:2);
+  vU.textContent=w(n[0]); vI.textContent=w(n[1]); vP.textContent=w(n[2]);
+  if(n.length===7){ xU.textContent=w(n[3]); xI.textContent=w(n[4]); xP.textContent=w(n[5]); echMax=n[6]; }
+  else { xU.textContent=xI.textContent=xP.textContent="\u2014"; echMax=0; }
+  tMes=performance.now(); nMes++;
+  elMes.classList.remove("perime");
+}
+function recevoir(ev){
+  tampon+=dec.decode(ev.target.value);
+  let i;
+  while((i=tampon.indexOf("\n"))>=0){ ligneRecue(tampon.slice(0,i)); tampon=tampon.slice(i+1); }
+  if(tampon.length>64) tampon="";
+}
+setInterval(()=>{
+  const t=performance.now(), frais=t-tMes<1500;
+  const lie=!!(device&&device.gatt&&device.gatt.connected&&chEcr);
+  let txt="Bateau non connecté", alarme=false;
+  if(lie){
+    if(frais) txt = echMax ? "Valeurs brutes, max sur "+echMax+" mesures/s" : "Valeurs brutes, carte sans maxima";
+    else if(t-tAbs<1500){ txt="Capteur muet : câblage ou cavalier 0x41 ?"; alarme=true; }
+    else if(t-tConn<3000) txt="En attente des mesures…";
+    else { txt="Aucune mesure reçue : reflasher la carte ?"; alarme=true; }
+  }
+  if(!frais){ viderMesures(); elMes.classList.add("perime"); }
+  etatMes.textContent=txt; etatMes.classList.toggle("alerte",alarme);
+},250);
+
+function ajusterMesures(){
+  if(elMes.style.display==="none") return;
+  const h=elMes.clientHeight-etatMes.offsetHeight-10;
+  let t=Math.max(20,Math.min(82,h/3/1.3,window.innerWidth*.15));
+  elMes.style.setProperty("--t",t.toFixed(1)+"px");
+  // si ça déborde encore (écran très bas), on réduit jusqu'à ce que tout tienne
+  for(let k=0;k<15&&t>20&&elMes.scrollHeight>elMes.clientHeight+1;k++){
+    t=Math.max(20,t-3); elMes.style.setProperty("--t",t.toFixed(1)+"px");
+  }
+}
+if("ResizeObserver" in window) new ResizeObserver(ajusterMesures).observe(elMes);
+window.addEventListener("resize",ajusterMesures);
+
+razMax.addEventListener("click",()=>{
+  const lie=!!(device&&device.gatt&&device.gatt.connected&&chEcr);
+  if(lie) aZero=true;
+  razMax.textContent = lie ? "Demande envoyée" : "Bateau non connecté";
+  setTimeout(()=>{ razMax.textContent="Remettre à zéro"; },1500);
+});
 
 /* ---------- garde-fous ---------- */
 async function allume(){ try{ if("wakeLock" in navigator) await navigator.wakeLock.request("screen"); }catch(e){} }
@@ -423,6 +505,7 @@ poserAmpli(lire("ampli",45));
 poserSens(lire("sens",1));
 poserTrim(lire("trim",0));
 poser(0);
+ajusterMesures();
 if(!navigator.bluetooth){
   majStatut("Ce navigateur ne fait pas de Bluetooth",false);
   alerter("iPhone : ouvrir cette page dans Bluefy. Ordinateur : Chrome ou Edge.");
