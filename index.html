@@ -53,8 +53,17 @@ body{
 #mesures{
   --t:60px;
   flex:1 1 0;min-height:0;overflow:hidden;background:var(--abysse);
-  display:flex;flex-direction:column;justify-content:center;
+  display:flex;flex-direction:column;
   padding:2px 18px 4px;
+}
+#vues{flex:1 1 0;min-height:0;position:relative;display:flex;flex-direction:column;justify-content:center;cursor:pointer}
+#chiffres{display:flex;flex-direction:column;justify-content:center}
+#chiffres[hidden]{display:none}
+#courbes{display:block;width:100%;height:100%;min-height:0}
+#courbes[hidden]{display:none}
+#bascule{
+  position:absolute;top:0;right:0;pointer-events:none;
+  font-size:11.5px;font-weight:600;color:var(--brume);opacity:.75;
 }
 .lig{
   display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -72,6 +81,37 @@ body{
   font-variant-numeric:tabular-nums;color:var(--ecume);letter-spacing:-.01em;
 }
 .val small{font-size:max(13px,calc(var(--t)*.42));font-weight:600;color:var(--brume);margin-left:7px}
+#runbar{
+  flex:0 0 auto;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;
+  padding-top:6px;border-top:1px solid rgba(238,242,247,.16);margin-top:4px;
+}
+#runbar button{
+  font:inherit;font-size:13.5px;font-weight:600;padding:9px 13px;
+  background:rgba(238,242,247,.06);color:var(--ecume);
+  border:1.5px solid rgba(238,242,247,.45);border-radius:2px;cursor:pointer;white-space:nowrap;
+}
+#runbar button:disabled{opacity:.35}
+#runBtn.enr{border-color:var(--babord);color:var(--babord);background:rgba(232,96,106,.12)}
+#runInfo{font-size:12.5px;font-weight:600;color:var(--brume);text-align:center;font-variant-numeric:tabular-nums}
+#csvbox{
+  position:fixed;inset:0;z-index:50;background:var(--abysse);
+  display:flex;flex-direction:column;gap:10px;padding:14px;
+  padding-top:calc(14px + env(safe-area-inset-top,0px));
+  padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));
+}
+#csvbox[hidden]{display:none}
+#csvtxt{
+  flex:1;min-height:0;width:100%;resize:none;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;line-height:1.4;
+  background:#0a1a2b;color:var(--ecume);border:1.5px solid rgba(238,242,247,.35);
+  border-radius:2px;padding:8px;-webkit-user-select:text;user-select:text;
+}
+#csvb{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#csvb button{
+  font:inherit;font-size:16px;font-weight:600;padding:14px;
+  background:rgba(238,242,247,.06);color:var(--ecume);
+  border:2px solid var(--ecume);border-radius:2px;cursor:pointer;
+}
 #etatMes{text-align:center;font-size:13px;font-weight:600;color:var(--brume);padding-top:5px;min-height:23px}
 #etatMes.alerte{color:var(--babord)}
 #mesures.perime .val b{color:var(--brume);opacity:.5}
@@ -88,7 +128,7 @@ body{
   border:1.5px solid rgba(238,242,247,.45);border-radius:2px;cursor:pointer;
 }
 .rcmd button:active{background:var(--ecume);color:var(--abysse)}
-#sensB,#razMax{width:auto;padding:0 16px;font-size:15px}
+#sensB,#razMax,#voirCsv{width:auto;padding:0 16px;font-size:15px}
 .rcmd b{font-size:19px;font-weight:800;min-width:54px;text-align:center;font-variant-numeric:tabular-nums}
 #reglages p{font-size:13px;line-height:1.5;color:var(--brume);margin:18px 0 20px;border-top:1px solid rgba(238,242,247,.16);padding-top:16px}
 #fermer{
@@ -165,6 +205,8 @@ body{
   #milieu{margin-top:8px;padding:11px;font-size:17px}
   .mes{padding:4px 10px 5px}
   .mes b{font-size:18px}
+  #runbar{padding-top:4px;margin-top:2px}
+  #runbar button{padding:6px 10px;font-size:12.5px}
 }
 </style>
 </head>
@@ -185,10 +227,21 @@ body{
   </div>
 
   <div id="mesures" class="perime">
-    <div class="lig"><span class="nom">Tension<em>max <b id="xU">—</b> V</em></span><span class="val"><b id="vU">—</b><small>V</small></span></div>
-    <div class="lig"><span class="nom">Courant<em>max <b id="xI">—</b> A</em></span><span class="val"><b id="vI">—</b><small>A</small></span></div>
-    <div class="lig"><span class="nom">Puissance<em>max <b id="xP">—</b> W</em></span><span class="val"><b id="vP">—</b><small>W</small></span></div>
+    <div id="vues" role="button" tabindex="0" aria-label="Basculer chiffres et courbes">
+      <div id="chiffres">
+        <div class="lig"><span class="nom">Tension<em>max <b id="xU">—</b> V</em></span><span class="val"><b id="vU">—</b><small>V</small></span></div>
+        <div class="lig"><span class="nom">Courant<em>max <b id="xI">—</b> A</em></span><span class="val"><b id="vI">—</b><small>A</small></span></div>
+        <div class="lig"><span class="nom">Puissance<em>max <b id="xP">—</b> W</em></span><span class="val"><b id="vP">—</b><small>W</small></span></div>
+      </div>
+      <canvas id="courbes" hidden></canvas>
+      <span id="bascule">courbes &#8250;</span>
+    </div>
     <div id="etatMes">Bateau non connecté</div>
+    <div id="runbar">
+      <button id="runBtn" type="button">Démarrer un run</button>
+      <span id="runInfo">aucun run</span>
+      <button id="dlBtn" type="button" disabled>CSV</button>
+    </div>
   </div>
 
   <div id="reglages" hidden>
@@ -209,6 +262,10 @@ body{
       <span>Maxima U, I, P</span>
       <div class="rcmd"><button id="razMax" type="button">Remettre à zéro</button></div>
     </div>
+    <div class="rlig">
+      <span>Données du run</span>
+      <div class="rcmd"><button id="voirCsv" type="button">Afficher le CSV</button></div>
+    </div>
     <p>Le débattement limite la course dans l'application. La butée qui protège réellement la tringlerie reste MINI et MAXI dans le programme de la carte : c'est là qu'il faut aussi la régler.</p>
     <button id="fermer" type="button">Fermer</button>
   </div>
@@ -226,6 +283,11 @@ body{
     <div id="alerte"></div>
   </div>
 
+</div>
+
+<div id="csvbox" hidden>
+  <textarea id="csvtxt" readonly spellcheck="false"></textarea>
+  <div id="csvb"><button id="csvcopy" type="button">Tout copier</button><button id="csvclose" type="button">Fermer</button></div>
 </div>
 
 <script>
@@ -256,12 +318,19 @@ const app=$("#app"),elSt=$("#statut"),elTxt=$("#txt"),elNom=$("#nom"),elPouls=$(
       trimM=$("#trimM"),trimP=$("#trimP"),trimVal=$("#trimVal"),
       ampM=$("#ampM"),ampP=$("#ampP"),ampV=$("#ampV"),sensB=$("#sensB"),
       repG=$("#repG"),repD=$("#repD"),
+      elVues=$("#vues"),chiffres=$("#chiffres"),cv=$("#courbes"),bascTxt=$("#bascule"),
+      runBtn=$("#runBtn"),runInfo=$("#runInfo"),dlBtn=$("#dlBtn"),voirCsv=$("#voirCsv"),
+      csvbox=$("#csvbox"),csvtxt=$("#csvtxt"),csvcopy=$("#csvcopy"),csvclose=$("#csvclose"),
       mHz=$("#mHz"),mMs=$("#mMs"),mErr=$("#mErr");
+const ctx=cv.getContext("2d");
 
 let device=null,chEcr=null,voulu=false,occupe=false;
 let angle=0,trim=0,ampli=45,sens=1;
 let nErr=0,nTr=0,durees=[],t0compte=performance.now();
 let tampon="",tConn=0,tMes=-1e9,tAbs=-1e9,nMes=0,freqMes=0,echMax=0,aZero=false;
+/* échantillons : [t_ms, U, I, P, Umax, Imax, Pmax, barre] */
+const CAP=60000, FEN=60000;            // 60 000 points gardés, fenêtre tracée de 60 s
+let ech=[], tRun0=null, tRun1=null, vueCourbes=false, cw=0, ch=0;
 const dec=new TextDecoder();
 
 const lire=(k,d)=>{try{const v=parseInt(localStorage.getItem(k),10);return isFinite(v)?v:d;}catch(e){return d;}};
@@ -429,6 +498,7 @@ setInterval(()=>{
   freqMes=nMes/dt; nMes=0; t0compte=performance.now();
   mMs.textContent=durees.length?Math.round(durees.reduce((a,b)=>a+b,0)/durees.length):"\u2014";
   mErr.textContent=nErr;
+  majRun();
   elPouls.classList.add("bat"); setTimeout(()=>elPouls.classList.remove("bat"),170);
 },1000);
 
@@ -447,7 +517,13 @@ function ligneRecue(l){
   vU.textContent=w(n[0]); vI.textContent=w(n[1]); vP.textContent=w(n[2]);
   if(n.length===7){ xU.textContent=w(n[3]); xI.textContent=w(n[4]); xP.textContent=w(n[5]); echMax=n[6]; }
   else { xU.textContent=xI.textContent=xP.textContent="\u2014"; echMax=0; }
-  tMes=performance.now(); nMes++;
+  const t=performance.now();
+  ech.push([t, n[0]/1000, n[1]/1000, n[2]/1000,
+            n.length===7?n[3]/1000:n[0]/1000,
+            n.length===7?n[4]/1000:n[1]/1000,
+            n.length===7?n[5]/1000:n[2]/1000, angle]);
+  if(ech.length>CAP) ech.splice(0, ech.length-CAP);
+  tMes=t; nMes++;
   elMes.classList.remove("perime");
 }
 function recevoir(ev){
@@ -472,14 +548,155 @@ setInterval(()=>{
 
 function ajusterMesures(){
   if(elMes.style.display==="none") return;
-  const h=elMes.clientHeight-etatMes.offsetHeight-10;
+  dimCanvas();
+  if(vueCourbes) return;
+  const h=elVues.clientHeight;
   let t=Math.max(20,Math.min(82,h/3/1.3,window.innerWidth*.15));
   elMes.style.setProperty("--t",t.toFixed(1)+"px");
   // si ça déborde encore (écran très bas), on réduit jusqu'à ce que tout tienne
-  for(let k=0;k<15&&t>20&&elMes.scrollHeight>elMes.clientHeight+1;k++){
+  for(let k=0;k<15&&t>20&&chiffres.scrollHeight>h+1;k++){
     t=Math.max(20,t-3); elMes.style.setProperty("--t",t.toFixed(1)+"px");
   }
 }
+
+/* ---------- bascule chiffres / courbes ---------- */
+function basculer(){
+  vueCourbes=!vueCourbes;
+  chiffres.hidden=vueCourbes; cv.hidden=!vueCourbes;
+  bascTxt.textContent = vueCourbes ? "\u2039 chiffres" : "courbes \u203A";
+  if(vueCourbes){ dimCanvas(); tracer(); } else ajusterMesures();
+}
+elVues.addEventListener("click",basculer);
+elVues.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ basculer(); e.preventDefault(); } });
+
+function dimCanvas(){
+  if(cv.hidden) return;
+  const r=cv.getBoundingClientRect();
+  if(r.width<2||r.height<2) return;
+  const d=Math.min(2,window.devicePixelRatio||1);
+  cw=r.width; ch=r.height;
+  cv.width=Math.round(cw*d); cv.height=Math.round(ch*d);
+  ctx.setTransform(d,0,0,d,0,0);
+}
+
+const NOMS=["Tension","Courant","Puissance"], UNI=["V","A","W"];
+function tracer(){
+  if(cv.hidden||cw<2||ch<2) return;
+  const t1=performance.now(), t0=t1-FEN;
+  ctx.clearRect(0,0,cw,ch);
+
+  // points de la fenêtre visible
+  let d0=ech.length;
+  while(d0>0 && ech[d0-1][0]>=t0) d0--;
+  const vis=ech.slice(d0);
+
+  const gap=9, hp=(ch-2*gap)/3;
+  ctx.lineJoin="round"; ctx.lineCap="round";
+  for(let s=0;s<3;s++){
+    const yb=s*(hp+gap)+hp;                       // ligne de base du cadran
+    ctx.strokeStyle="rgba(238,242,247,.18)"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(0,yb+.5); ctx.lineTo(cw,yb+.5); ctx.stroke();
+
+    let mn=Infinity,mx=-Infinity;
+    for(let i=0;i<vis.length;i++){ const v=vis[i][1+s]; if(v<mn)mn=v; if(v>mx)mx=v; }
+    if(!isFinite(mn)){ mn=0; mx=1; }
+    if(mx-mn<1e-9) { const e=Math.abs(mx)*.1||.1; mn-=e; mx+=e; }
+    const marge=(mx-mn)*.12; mn-=marge; mx+=marge;
+
+    if(vis.length>1){
+      ctx.strokeStyle="#eef2f7"; ctx.lineWidth=1.7; ctx.beginPath();
+      for(let i=0;i<vis.length;i++){
+        const x=(vis[i][0]-t0)/FEN*cw, y=yb-(vis[i][1+s]-mn)/(mx-mn)*hp;
+        i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+      }
+      ctx.stroke();
+    }
+    ctx.font="600 11.5px Archivo, system-ui, sans-serif";
+    ctx.fillStyle="#8fa3bb"; ctx.textAlign="left"; ctx.textBaseline="top";
+    ctx.fillText(NOMS[s], 1, yb-hp+1);
+    ctx.textAlign="right";
+    ctx.fillText(fr(mx,2)+" "+UNI[s], cw-1, yb-hp+1);
+    ctx.textBaseline="bottom";
+    ctx.fillText(fr(mn,2), cw-1, yb-2);
+  }
+
+  // bande rouge : portion enregistrée
+  if(tRun0!==null){
+    const a=Math.max(0,(tRun0-t0)/FEN*cw), b=Math.min(cw,((tRun1===null?t1:tRun1)-t0)/FEN*cw);
+    if(b>a){ ctx.fillStyle="#e8606a"; ctx.fillRect(a,ch-3,b-a,3); }
+  }
+  ctx.font="600 11px Archivo, system-ui, sans-serif";
+  ctx.fillStyle="rgba(143,163,187,.8)"; ctx.textAlign="left"; ctx.textBaseline="bottom";
+  ctx.fillText("\u2190 60 s", 1, ch-5);
+}
+setInterval(()=>{ if(vueCourbes) tracer(); },100);
+
+/* ---------- enregistrement d'un run ---------- */
+function bornes(){
+  if(tRun0===null) return [];
+  const f=tRun1===null?Infinity:tRun1;
+  return ech.filter(e=>e[0]>=tRun0 && e[0]<=f);
+}
+function majRun(){
+  const enr = tRun0!==null && tRun1===null;
+  runBtn.textContent = enr ? "Arrêter le run" : "Démarrer un run";
+  runBtn.classList.toggle("enr",enr);
+  if(tRun0===null){ runInfo.textContent="aucun run"; dlBtn.disabled=true; return; }
+  const n=bornes().length;
+  const d=((tRun1===null?performance.now():tRun1)-tRun0)/1000;
+  runInfo.textContent=(d<600?d.toFixed(0)+" s":(d/60).toFixed(1)+" min")+" \u00B7 "+n+" pts";
+  dlBtn.disabled = n===0;
+}
+runBtn.addEventListener("click",()=>{
+  if(tRun0!==null && tRun1===null) tRun1=performance.now();
+  else { tRun0=performance.now(); tRun1=null; }
+  majRun();
+});
+
+/* ---------- export CSV ---------- */
+// séparateur point-virgule et virgule décimale : s'ouvre directement dans un Excel français
+function csv(){
+  const L=bornes(), v=(x,d)=>x.toFixed(d).replace(".",",");
+  let s="\uFEFFt_s;U_V;I_A;P_W;Umax_V;Imax_A;Pmax_W;barre_deg\n";
+  for(const e of L){
+    s+=v((e[0]-tRun0)/1000,3)+";"+v(e[1],4)+";"+v(e[2],4)+";"+v(e[3],4)
+      +";"+v(e[4],4)+";"+v(e[5],4)+";"+v(e[6],4)+";"+e[7]+"\n";
+  }
+  return s;
+}
+function nomFichier(){
+  const d=new Date(), p=n=>String(n).padStart(2,"0");
+  return "run_"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"_"+p(d.getHours())+p(d.getMinutes())+".csv";
+}
+function montrerCsv(txt){ csvtxt.value=txt; csvbox.hidden=false; }
+csvclose.addEventListener("click",()=>{ csvbox.hidden=true; });
+csvcopy.addEventListener("click",async()=>{
+  try{ await navigator.clipboard.writeText(csvtxt.value); }
+  catch(e){ csvtxt.focus(); csvtxt.select(); try{ document.execCommand("copy"); }catch(e2){} }
+  csvcopy.textContent="Copié"; setTimeout(()=>{csvcopy.textContent="Tout copier";},1500);
+});
+voirCsv.addEventListener("click",()=>{
+  if(tRun0===null){ voirCsv.textContent="Aucun run"; setTimeout(()=>{voirCsv.textContent="Afficher le CSV";},1500); return; }
+  montrerCsv(csv());
+});
+dlBtn.addEventListener("click",async()=>{
+  const txt=csv(), nom=nomFichier();
+  const blob=new Blob([txt],{type:"text/csv;charset=utf-8"});
+  // 1. feuille de partage iOS (Enregistrer dans Fichiers, Mail…)
+  try{
+    const f=new File([blob],nom,{type:"text/csv"});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){ await navigator.share({files:[f],title:nom}); return; }
+  }catch(e){ if(e&&e.name==="AbortError") return; }
+  // 2. téléchargement classique
+  try{
+    const u=URL.createObjectURL(blob), a=document.createElement("a");
+    a.href=u; a.download=nom; document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(u); a.remove();},3000);
+    return;
+  }catch(e){}
+  // 3. dernier recours : le texte, à copier
+  montrerCsv(txt);
+});
 if("ResizeObserver" in window) new ResizeObserver(ajusterMesures).observe(elMes);
 window.addEventListener("resize",ajusterMesures);
 
@@ -506,6 +723,7 @@ poserSens(lire("sens",1));
 poserTrim(lire("trim",0));
 poser(0);
 ajusterMesures();
+majRun();
 if(!navigator.bluetooth){
   majStatut("Ce navigateur ne fait pas de Bluetooth",false);
   alerter("iPhone : ouvrir cette page dans Bluefy. Ordinateur : Chrome ou Edge.");
