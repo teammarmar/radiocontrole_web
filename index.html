@@ -442,7 +442,8 @@ document.addEventListener("keydown",e=>{
   if(e.key===" "||e.key==="ArrowDown"){poser(0);e.preventDefault();}
   if(e.key===","){poserTrim(trim-TRIM_PAS);e.preventDefault();}
   if(e.key==="."){poserTrim(trim+TRIM_PAS);e.preventDefault();}
-  if(e.key==="t"||e.key==="T"){topChrono();e.preventDefault();}
+  // T au clavier ; PageDown/PageUp = boutons d'une télécommande de présentation Bluetooth
+  if(e.key==="t"||e.key==="T"||e.key==="PageDown"||e.key==="PageUp"){topChrono();e.preventDefault();}
 });
 
 /* ---------- connexion ---------- */
@@ -729,22 +730,58 @@ function message(txt){
   tMsg=performance.now()+2500; topInfo.classList.add("alerte"); topInfo.innerHTML=txt;
   setTimeout(majTop,2600);
 }
+/* ---------- retour sonore : iOS ignore navigator.vibrate, on bipe et on annonce ---------- */
+let actx=null, voixOK=false;
+function deverrouillerSon(){              // iOS n'autorise le son qu'après un geste de l'utilisateur
+  try{
+    if(navigator.audioSession) navigator.audioSession.type="playback";  // passe outre le mode silencieux si le navigateur le permet
+    if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==="suspended") actx.resume();
+    if(!voixOK && window.speechSynthesis){ speechSynthesis.speak(new SpeechSynthesisUtterance(" ")); voixOK=true; }
+  }catch(e){}
+}
+["touchend","click","keydown"].forEach(ev=>document.addEventListener(ev,deverrouillerSon,{passive:true}));
+function bip(notes){                      // notes : [[fréquence Hz, durée ms], ...]
+  if(!actx) return;
+  let t=actx.currentTime+0.01;
+  for(const [f,d] of notes){
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.type="square"; o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.25,t+0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+d/1000);
+    o.connect(g); g.connect(actx.destination);
+    o.start(t); o.stop(t+d/1000+0.02);
+    t+=d/1000+0.07;
+  }
+}
+function dire(txt){
+  try{ if(!window.speechSynthesis) return;
+    const u=new SpeechSynthesisUtterance(txt); u.lang="fr-FR"; u.rate=1.15;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  }catch(e){}
+}
+const BIP_DEP=[[1760,120]], BIP_ARR=[[1175,110],[1175,110]], BIP_REFUS=[[220,450]];
+
 function topChrono(){
   const t=performance.now();
   if(t-tDernierTop<ANTIREBOND) return;
   if(tDep===null && !enCours()){
     // détrompeur : on n'écrase pas un run terminé dont le CSV n'a peut-être pas été pris
-    if(tRun0!==null){ message("Run arrêté<small>démarrer un nouveau run d'abord</small>"); return; }
+    if(tRun0!==null){ message("Run arrêté<small>démarrer un nouveau run d'abord</small>"); bip(BIP_REFUS); dire("Run arrêté"); return; }
     demarrerRun(t);                                // premier top : le run démarre tout seul
   }
   tDernierTop=t; tMsg=0;
   if(tDep===null){
     nPass++; tDep=t; tops.push([t,"depart",nPass]);
     if(navigator.vibrate) navigator.vibrate(60);
+    bip(BIP_DEP);
   } else {
     tops.push([t,"arrivee",nPass]);
     dernier={n:nPass,d:(t-tDep)/1000}; tDep=null;
     if(navigator.vibrate) navigator.vibrate([60,80,60]);
+    bip(BIP_ARR);
+    setTimeout(()=>dire(fr(dernier.d,1)+" secondes"),350);
   }
   majTop(); majRun();
 }
