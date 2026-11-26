@@ -51,36 +51,30 @@ body{
 
 /* ---------- mesures électriques ---------- */
 #mesures{
-  --t:60px;
   flex:1 1 0;min-height:0;overflow:hidden;background:var(--abysse);
   display:flex;flex-direction:column;
-  padding:2px 18px 4px;
+  padding:2px 14px 8px;
 }
-#vues{flex:1 1 0;min-height:0;position:relative;display:flex;flex-direction:column;justify-content:center;cursor:pointer}
-#chiffres{display:flex;flex-direction:column;justify-content:center}
+/* mesures électriques : une seule ligne discrète (touchée : bascule vers les courbes) */
+#vues{flex:0 0 auto;position:relative;cursor:pointer;padding:5px 0 3px}
+#vues:has(#courbes:not([hidden])){flex:1 1 0;min-height:80px}
+#mesures:has(#courbes:not([hidden])) #topBtn{flex:1 1 0;min-height:84px}
+#mesures:has(#courbes:not([hidden])) #topBig{font-size:clamp(30px,10vw,46px)}
+#mesures:has(#courbes:not([hidden])) #topSub{font-size:12px}
+#chiffres{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-right:64px}
 #chiffres[hidden]{display:none}
+.mini{white-space:nowrap;line-height:1.15}
+.mini b{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ecume)}
+.mini small{font-size:12px;font-weight:600;color:var(--brume);margin-left:3px}
+.mini i{display:block;font-style:normal;font-size:10.5px;font-weight:600;color:var(--brume);font-variant-numeric:tabular-nums}
+#mesures.perime .mini b{color:var(--brume);opacity:.5}
 #courbes{display:block;width:100%;height:100%;min-height:0}
 #courbes[hidden]{display:none}
 #bascule{
-  position:absolute;top:0;right:0;pointer-events:none;
+  position:absolute;top:50%;right:0;transform:translateY(-50%);pointer-events:none;
   font-size:11.5px;font-weight:600;color:var(--brume);opacity:.75;
 }
-.lig{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:calc(var(--t)*.13) 0;
-  border-bottom:1px solid rgba(238,242,247,.16);
-}
-.lig:nth-child(3){border-bottom:none}
-.nom{display:flex;flex-direction:column;gap:calc(var(--t)*.07);font-size:clamp(13px,calc(var(--t)*.25),17px);font-weight:600;color:var(--brume)}
-.nom em{font-style:normal;font-size:max(14px,calc(var(--t)*.31));white-space:nowrap}
-.nom em b{font-weight:800;color:var(--ecume);font-variant-numeric:tabular-nums}
-#mesures.perime .nom em b{color:var(--brume);opacity:.5}
-.val{white-space:nowrap;text-align:right}
-.val b{
-  font-size:var(--t);font-weight:800;line-height:1;
-  font-variant-numeric:tabular-nums;color:var(--ecume);letter-spacing:-.01em;
-}
-.val small{font-size:max(13px,calc(var(--t)*.42));font-weight:600;color:var(--brume);margin-left:7px}
+#vues:has(#courbes:not([hidden])) #bascule{top:2px;transform:none}
 #runbar{
   flex:0 0 auto;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;
   padding-top:6px;border-top:1px solid rgba(238,242,247,.16);margin-top:4px;
@@ -93,27 +87,32 @@ body{
 #runbar button:disabled{opacity:.35}
 #runBtn.enr{border-color:var(--babord);color:var(--babord);background:rgba(232,96,106,.12)}
 #runInfo{font-size:12.5px;font-weight:600;color:var(--brume);text-align:center;font-variant-numeric:tabular-nums}
-/* chronométrage : un seul bouton, vert au départ, rouge à l'arrivée (détrompeur) */
-#chronobar{
-  flex:0 0 auto;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;
-  padding-top:7px;margin-top:6px;border-top:1px solid rgba(238,242,247,.16);
-}
+/* chronométrage : une grande dalle, verte au départ, rouge à l'arrivée (détrompeur) */
 #topBtn{
-  font:inherit;font-size:16px;font-weight:800;padding:12px 14px;min-width:158px;
-  border:2px solid var(--tribord);color:var(--tribord);background:rgba(79,192,138,.13);
-  border-radius:2px;cursor:pointer;white-space:nowrap;font-variant-numeric:tabular-nums;
+  flex:1 1 auto;min-height:118px;margin-top:8px;width:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font:inherit;color:var(--tribord);background:rgba(79,192,138,.13);
+  border:3px solid var(--tribord);border-radius:3px;cursor:pointer;
+  font-variant-numeric:tabular-nums;touch-action:manipulation;overflow:hidden;
 }
 #topBtn.arr{border-color:var(--babord);color:var(--babord);background:rgba(232,96,106,.15)}
-#topBtn:active{filter:brightness(1.35)}
-#topInfo{font-size:13.5px;font-weight:700;color:var(--ecume);text-align:center;font-variant-numeric:tabular-nums;line-height:1.3}
-#topInfo small{display:block;font-size:11.5px;font-weight:600;color:var(--brume)}
-#topInfo.alerte{color:var(--babord)}
+#topBtn:active{filter:brightness(1.45)}
+#topLbl{font-size:17px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+#topBig{font-size:clamp(44px,17vw,84px);font-weight:800;line-height:1;color:var(--ecume);white-space:nowrap}
+#topBig small{font-size:.42em;font-weight:600;color:var(--brume);margin-left:6px}
+#topSub{font-size:14px;font-weight:600;color:var(--brume);text-align:center;line-height:1.35;padding:0 8px}
+#topBtn.alerte #topBig{font-size:clamp(28px,9vw,44px);color:var(--babord)}
+#chronopied{
+  flex:0 0 auto;display:flex;align-items:center;gap:10px;min-height:38px;padding-top:6px;
+}
+#topHist{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--brume);font-variant-numeric:tabular-nums;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#topHist b{color:var(--ecume);font-weight:800}
 #topAnnul{
-  font:inherit;font-size:12.5px;font-weight:600;padding:9px 10px;background:none;color:var(--brume);
+  flex:0 0 auto;font:inherit;font-size:13px;font-weight:600;padding:7px 12px;background:none;color:var(--brume);
   border:1.5px solid rgba(238,242,247,.35);border-radius:2px;cursor:pointer;
 }
 #topAnnul[hidden]{display:none}
-#chronobar:has(#topAnnul[hidden]){grid-template-columns:auto 1fr}
 #csvbox{
   position:fixed;inset:0;z-index:50;background:var(--abysse);
   display:flex;flex-direction:column;gap:10px;padding:14px;
@@ -133,9 +132,8 @@ body{
   background:rgba(238,242,247,.06);color:var(--ecume);
   border:2px solid var(--ecume);border-radius:2px;cursor:pointer;
 }
-#etatMes{text-align:center;font-size:13px;font-weight:600;color:var(--brume);padding-top:5px;min-height:23px}
+#etatMes{text-align:center;font-size:12px;font-weight:600;color:var(--brume);padding:1px 0 3px;min-height:18px}
 #etatMes.alerte{color:var(--babord)}
-#mesures.perime .val b{color:var(--brume);opacity:.5}
 
 /* ---------- réglages ---------- */
 #reglages{flex:1 1 auto;min-height:0;overflow-y:auto;padding:18px 16px;background:var(--abysse)}
@@ -210,10 +208,10 @@ body{
 
 /* ---------- pied ---------- */
 #pied{flex:0 0 auto;display:grid;grid-template-columns:repeat(3,1fr);background:var(--abysse);border-top:1px solid rgba(238,242,247,.28)}
-.mes{padding:8px 12px 10px;border-right:1px solid rgba(238,242,247,.16)}
+.mes{padding:4px 10px 5px;border-right:1px solid rgba(238,242,247,.16);white-space:nowrap}
 .mes:nth-of-type(3){border-right:none}
-.mes b{display:block;font-size:23px;font-weight:800;color:var(--ecume);font-variant-numeric:tabular-nums;line-height:1.1}
-.mes span{font-size:11.5px;color:var(--brume)}
+.mes b{font-size:13px;font-weight:800;color:var(--ecume);font-variant-numeric:tabular-nums}
+.mes span{font-size:10.5px;color:var(--brume);margin-left:4px}
 #alerte{grid-column:1/-1;padding:9px 12px;font-size:13px;font-weight:600;color:var(--babord);border-top:1px solid rgba(238,242,247,.16);display:none}
 /* ---------- petits écrans : on compacte les commandes pour garder les mesures lisibles ---------- */
 @media (max-height:660px){
@@ -225,13 +223,15 @@ body{
   #barre,#barre::-webkit-slider-runnable-track,#barre::-moz-range-track{height:60px}
   #barre::-webkit-slider-thumb,#barre::-moz-range-thumb{height:60px}
   #milieu{margin-top:8px;padding:11px;font-size:17px}
-  .mes{padding:4px 10px 5px}
-  .mes b{font-size:18px}
+  .mes{padding:3px 8px 4px}
   #runbar{padding-top:4px;margin-top:2px}
   #runbar button{padding:6px 10px;font-size:12.5px}
-  #chronobar{padding-top:4px;margin-top:3px}
-  #topBtn{padding:8px 11px;font-size:14px;min-width:134px}
-  #topAnnul{padding:6px 8px;font-size:12px}
+  #topBtn{min-height:92px;margin-top:5px}
+  #topLbl{font-size:15px}
+  #topBig{font-size:clamp(38px,13vw,60px)}
+  #topSub{font-size:12.5px}
+  #chronopied{min-height:32px;padding-top:4px}
+  #topAnnul{padding:5px 10px;font-size:12px}
 }
 </style>
 </head>
@@ -254,9 +254,9 @@ body{
   <div id="mesures" class="perime">
     <div id="vues" role="button" tabindex="0" aria-label="Basculer chiffres et courbes">
       <div id="chiffres">
-        <div class="lig"><span class="nom">Tension<em>max <b id="xU">—</b> V</em></span><span class="val"><b id="vU">—</b><small>V</small></span></div>
-        <div class="lig"><span class="nom">Courant<em>max <b id="xI">—</b> A</em></span><span class="val"><b id="vI">—</b><small>A</small></span></div>
-        <div class="lig"><span class="nom">Puissance<em>max <b id="xP">—</b> W</em></span><span class="val"><b id="vP">—</b><small>W</small></span></div>
+        <div class="mini"><b id="vU">—</b><small>V</small><i>max <span id="xU">—</span></i></div>
+        <div class="mini"><b id="vI">—</b><small>A</small><i>max <span id="xI">—</span></i></div>
+        <div class="mini"><b id="vP">—</b><small>W</small><i>max <span id="xP">—</span></i></div>
       </div>
       <canvas id="courbes" hidden></canvas>
       <span id="bascule">courbes &#8250;</span>
@@ -267,10 +267,14 @@ body{
       <span id="runInfo">aucun run</span>
       <button id="dlBtn" type="button" disabled>CSV</button>
     </div>
-    <div id="chronobar">
-      <button id="topBtn" type="button">Top départ n°1</button>
-      <span id="topInfo">Aucun passage</span>
-      <button id="topAnnul" type="button" hidden>Annuler</button>
+    <button id="topBtn" type="button">
+      <span id="topLbl">Top départ n°1</span>
+      <span id="topBig">—</span>
+      <span id="topSub">base de 10,5 m</span>
+    </button>
+    <div id="chronopied">
+      <span id="topHist">aucun passage</span>
+      <button id="topAnnul" type="button" hidden>Annuler le départ</button>
     </div>
   </div>
 
@@ -359,7 +363,7 @@ const app=$("#app"),elSt=$("#statut"),elTxt=$("#txt"),elNom=$("#nom"),elPouls=$(
       elVues=$("#vues"),chiffres=$("#chiffres"),cv=$("#courbes"),bascTxt=$("#bascule"),
       runBtn=$("#runBtn"),runInfo=$("#runInfo"),dlBtn=$("#dlBtn"),voirCsv=$("#voirCsv"),
       csvbox=$("#csvbox"),csvtxt=$("#csvtxt"),csvcopy=$("#csvcopy"),csvclose=$("#csvclose"),
-      topBtn=$("#topBtn"),topInfo=$("#topInfo"),topAnnul=$("#topAnnul"),
+      topBtn=$("#topBtn"),topLbl=$("#topLbl"),topBig=$("#topBig"),topSub=$("#topSub"),topHist=$("#topHist"),topAnnul=$("#topAnnul"),
       distM=$("#distM"),distP=$("#distP"),distV=$("#distV"),
       mHz=$("#mHz"),mMs=$("#mMs"),mErr=$("#mErr");
 const ctx=cv.getContext("2d");
@@ -588,17 +592,9 @@ setInterval(()=>{
   etatMes.textContent=txt; etatMes.classList.toggle("alerte",alarme);
 },250);
 
-function ajusterMesures(){
+function ajusterMesures(){            // les chiffres ont une taille fixe ; seul le canvas suit
   if(elMes.style.display==="none") return;
-  dimCanvas();
-  if(vueCourbes) return;
-  const h=elVues.clientHeight;
-  let t=Math.max(20,Math.min(82,h/3/1.3,window.innerWidth*.15));
-  elMes.style.setProperty("--t",t.toFixed(1)+"px");
-  // si ça déborde encore (écran très bas), on réduit jusqu'à ce que tout tienne
-  for(let k=0;k<15&&t>20&&chiffres.scrollHeight>h+1;k++){
-    t=Math.max(20,t-3); elMes.style.setProperty("--t",t.toFixed(1)+"px");
-  }
+  dimCanvas(); if(vueCourbes) tracer();
 }
 
 /* ---------- bascule chiffres / courbes ---------- */
@@ -696,7 +692,7 @@ function majRun(){
   dlBtn.disabled = n===0;
 }
 const enCours=()=>tRun0!==null && tRun1===null;
-function demarrerRun(t){ tRun0=t; tRun1=null; tops=[]; nPass=0; tDep=null; dernier=null; majTop(); }
+function demarrerRun(t){ tRun0=t; tRun1=null; tops=[]; nPass=0; tDep=null; dernier=null; passes=[]; majTop(); }
 function arreterRun(t){ if(tDep!==null) annulerTop(); tRun1=t; majTop(); }
 runBtn.addEventListener("click",()=>{
   const t=performance.now();
@@ -709,25 +705,40 @@ runBtn.addEventListener("click",()=>{
 // deux départs de suite ou une arrivée sans départ. Un appui à moins de ANTIREBOND ms
 // du précédent est ignoré. Les tops sont inscrits dans le CSV (colonnes passage et top).
 const ANTIREBOND=800;
-let tops=[], nPass=0, tDep=null, tDernierTop=-1e9, dernier=null, dist=105, tMsg=0;   // dist en dm
+let tops=[], nPass=0, tDep=null, tDernierTop=-1e9, dernier=null, passes=[], dist=105, tMsg=0;   // dist en dm
 function poserDist(v){
   dist=Math.max(10,Math.min(1000,Math.round(v/5)*5)); noter("dist",dist);
   distV.textContent=fr(dist/10,1)+" m"; majTop();
 }
+const vit=d=>dist/10/d;                          // vitesse moyenne sur la base, m/s
 function majTop(){
   if(performance.now()<tMsg) return;            // un message est affiché, on le laisse
-  topInfo.classList.remove("alerte");
-  const ouvert=tDep!==null;
-  topBtn.textContent = ouvert ? "Top arrivée n°"+nPass : "Top départ n°"+(enCours()?nPass+1:1);
+  topBtn.classList.remove("alerte");
+  const ouvert=tDep!==null, base="base de "+fr(dist/10,1)+" m";
+  topLbl.textContent = ouvert ? "Top arrivée n°"+nPass : "Top départ n°"+(enCours()?nPass+1:1);
   topBtn.classList.toggle("arr",ouvert);
   topAnnul.hidden = !ouvert;
-  if(ouvert) topInfo.innerHTML="Passage "+nPass+"…<small>"+fr((performance.now()-tDep)/1000,1)+" s</small>";
-  else if(dernier) topInfo.innerHTML="P"+dernier.n+" : "+fr(dernier.d,2)+" s<small>"
-                    +fr(dist/10/dernier.d,3)+" m/s · "+fr(dist/10,1)+" m</small>";
-  else topInfo.innerHTML="Aucun passage<small>base de "+fr(dist/10,1)+" m</small>";
+  if(ouvert){                                   // passage en cours : le chrono tourne
+    topBig.innerHTML=fr((performance.now()-tDep)/1000,1)+"<small>s</small>";
+    topSub.textContent = dernier ? "précédent "+fr(vit(dernier.d),2)+" m/s · "+base : base;
+  } else if(dernier){                           // passage terminé : la vitesse en grand
+    topBig.innerHTML=fr(vit(dernier.d),2)+"<small>m/s</small>";
+    let t="P"+dernier.n+" : "+fr(dernier.d,2)+" s";
+    if(passes.length>=2){                       // aller-retour : la moyenne des vitesses annule le vent au 1er ordre
+      const a=passes[passes.length-2], b=passes[passes.length-1];
+      t+=" · aller-retour "+fr((vit(a.d)+vit(b.d))/2,2)+" m/s";
+    }
+    topSub.textContent=t;
+  } else {
+    topBig.textContent="—"; topSub.textContent=base;
+  }
+  topHist.innerHTML = passes.length
+    ? passes.slice(-4).map(p=>"P"+p.n+" <b>"+fr(vit(p.d),2)+"</b>").join(" · ")+" m/s"
+    : "aucun passage";
 }
-function message(txt){
-  tMsg=performance.now()+2500; topInfo.classList.add("alerte"); topInfo.innerHTML=txt;
+function message(titre,detail){
+  tMsg=performance.now()+2500; topBtn.classList.add("alerte");
+  topBig.textContent=titre; topSub.textContent=detail;
   setTimeout(majTop,2600);
 }
 /* ---------- retour sonore : iOS ignore navigator.vibrate, on bipe et on annonce ---------- */
@@ -768,7 +779,7 @@ function topChrono(){
   if(t-tDernierTop<ANTIREBOND) return;
   if(tDep===null && !enCours()){
     // détrompeur : on n'écrase pas un run terminé dont le CSV n'a peut-être pas été pris
-    if(tRun0!==null){ message("Run arrêté<small>démarrer un nouveau run d'abord</small>"); bip(BIP_REFUS); dire("Run arrêté"); return; }
+    if(tRun0!==null){ message("Run arrêté","démarrer un nouveau run d'abord"); bip(BIP_REFUS); dire("Run arrêté"); return; }
     demarrerRun(t);                                // premier top : le run démarre tout seul
   }
   tDernierTop=t; tMsg=0;
@@ -778,7 +789,7 @@ function topChrono(){
     bip(BIP_DEP);
   } else {
     tops.push([t,"arrivee",nPass]);
-    dernier={n:nPass,d:(t-tDep)/1000}; tDep=null;
+    dernier={n:nPass,d:(t-tDep)/1000}; passes.push(dernier); tDep=null;
     if(navigator.vibrate) navigator.vibrate([60,80,60]);
     bip(BIP_ARR);
     setTimeout(()=>dire(fr(dernier.d,1)+" secondes"),350);
