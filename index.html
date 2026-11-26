@@ -93,6 +93,27 @@ body{
 #runbar button:disabled{opacity:.35}
 #runBtn.enr{border-color:var(--babord);color:var(--babord);background:rgba(232,96,106,.12)}
 #runInfo{font-size:12.5px;font-weight:600;color:var(--brume);text-align:center;font-variant-numeric:tabular-nums}
+/* chronométrage : un seul bouton, vert au départ, rouge à l'arrivée (détrompeur) */
+#chronobar{
+  flex:0 0 auto;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;
+  padding-top:7px;margin-top:6px;border-top:1px solid rgba(238,242,247,.16);
+}
+#topBtn{
+  font:inherit;font-size:16px;font-weight:800;padding:12px 14px;min-width:158px;
+  border:2px solid var(--tribord);color:var(--tribord);background:rgba(79,192,138,.13);
+  border-radius:2px;cursor:pointer;white-space:nowrap;font-variant-numeric:tabular-nums;
+}
+#topBtn.arr{border-color:var(--babord);color:var(--babord);background:rgba(232,96,106,.15)}
+#topBtn:active{filter:brightness(1.35)}
+#topInfo{font-size:13.5px;font-weight:700;color:var(--ecume);text-align:center;font-variant-numeric:tabular-nums;line-height:1.3}
+#topInfo small{display:block;font-size:11.5px;font-weight:600;color:var(--brume)}
+#topInfo.alerte{color:var(--babord)}
+#topAnnul{
+  font:inherit;font-size:12.5px;font-weight:600;padding:9px 10px;background:none;color:var(--brume);
+  border:1.5px solid rgba(238,242,247,.35);border-radius:2px;cursor:pointer;
+}
+#topAnnul[hidden]{display:none}
+#chronobar:has(#topAnnul[hidden]){grid-template-columns:auto 1fr}
 #csvbox{
   position:fixed;inset:0;z-index:50;background:var(--abysse);
   display:flex;flex-direction:column;gap:10px;padding:14px;
@@ -130,6 +151,7 @@ body{
 .rcmd button:active{background:var(--ecume);color:var(--abysse)}
 #sensB,#razMax,#voirCsv{width:auto;padding:0 16px;font-size:15px}
 .rcmd b{font-size:19px;font-weight:800;min-width:54px;text-align:center;font-variant-numeric:tabular-nums}
+#distV{min-width:78px}
 #reglages p{font-size:13px;line-height:1.5;color:var(--brume);margin:18px 0 20px;border-top:1px solid rgba(238,242,247,.16);padding-top:16px}
 #fermer{
   width:100%;padding:16px;font:inherit;font-size:17px;font-weight:600;
@@ -207,6 +229,9 @@ body{
   .mes b{font-size:18px}
   #runbar{padding-top:4px;margin-top:2px}
   #runbar button{padding:6px 10px;font-size:12.5px}
+  #chronobar{padding-top:4px;margin-top:3px}
+  #topBtn{padding:8px 11px;font-size:14px;min-width:134px}
+  #topAnnul{padding:6px 8px;font-size:12px}
 }
 </style>
 </head>
@@ -242,6 +267,11 @@ body{
       <span id="runInfo">aucun run</span>
       <button id="dlBtn" type="button" disabled>CSV</button>
     </div>
+    <div id="chronobar">
+      <button id="topBtn" type="button">Top départ n°1</button>
+      <span id="topInfo">Aucun passage</span>
+      <button id="topAnnul" type="button" hidden>Annuler</button>
+    </div>
   </div>
 
   <div id="reglages" hidden>
@@ -261,6 +291,14 @@ body{
     <div class="rlig">
       <span>Maxima U, I, P</span>
       <div class="rcmd"><button id="razMax" type="button">Remettre à zéro</button></div>
+    </div>
+    <div class="rlig">
+      <span>Longueur de la base</span>
+      <div class="rcmd">
+        <button id="distM" type="button" aria-label="Raccourcir">−</button>
+        <b id="distV">10,5 m</b>
+        <button id="distP" type="button" aria-label="Allonger">+</button>
+      </div>
     </div>
     <div class="rlig">
       <span>Données du run</span>
@@ -321,6 +359,8 @@ const app=$("#app"),elSt=$("#statut"),elTxt=$("#txt"),elNom=$("#nom"),elPouls=$(
       elVues=$("#vues"),chiffres=$("#chiffres"),cv=$("#courbes"),bascTxt=$("#bascule"),
       runBtn=$("#runBtn"),runInfo=$("#runInfo"),dlBtn=$("#dlBtn"),voirCsv=$("#voirCsv"),
       csvbox=$("#csvbox"),csvtxt=$("#csvtxt"),csvcopy=$("#csvcopy"),csvclose=$("#csvclose"),
+      topBtn=$("#topBtn"),topInfo=$("#topInfo"),topAnnul=$("#topAnnul"),
+      distM=$("#distM"),distP=$("#distP"),distV=$("#distV"),
       mHz=$("#mHz"),mMs=$("#mMs"),mErr=$("#mErr");
 const ctx=cv.getContext("2d");
 
@@ -402,6 +442,7 @@ document.addEventListener("keydown",e=>{
   if(e.key===" "||e.key==="ArrowDown"){poser(0);e.preventDefault();}
   if(e.key===","){poserTrim(trim-TRIM_PAS);e.preventDefault();}
   if(e.key==="."){poserTrim(trim+TRIM_PAS);e.preventDefault();}
+  if(e.key==="t"||e.key==="T"){topChrono();e.preventDefault();}
 });
 
 /* ---------- connexion ---------- */
@@ -620,6 +661,12 @@ function tracer(){
     ctx.fillText(fr(mn,2), cw-1, yb-2);
   }
 
+  // traits verticaux : tops départ (vert) et arrivée (rouge)
+  for(const x of tops){
+    if(x[0]<t0) continue;
+    ctx.fillStyle = x[1]==="depart" ? "#4fc08a" : "#e8606a";
+    ctx.fillRect(Math.round((x[0]-t0)/FEN*cw)-1,0,2,ch-4);
+  }
   // bande rouge : portion enregistrée
   if(tRun0!==null){
     const a=Math.max(0,(tRun0-t0)/FEN*cw), b=Math.min(cw,((tRun1===null?t1:tRun1)-t0)/FEN*cw);
@@ -647,21 +694,90 @@ function majRun(){
   runInfo.textContent=(d<600?d.toFixed(0)+" s":(d/60).toFixed(1)+" min")+" \u00B7 "+n+" pts";
   dlBtn.disabled = n===0;
 }
+const enCours=()=>tRun0!==null && tRun1===null;
+function demarrerRun(t){ tRun0=t; tRun1=null; tops=[]; nPass=0; tDep=null; dernier=null; majTop(); }
+function arreterRun(t){ if(tDep!==null) annulerTop(); tRun1=t; majTop(); }
 runBtn.addEventListener("click",()=>{
-  if(tRun0!==null && tRun1===null) tRun1=performance.now();
-  else { tRun0=performance.now(); tRun1=null; }
+  const t=performance.now();
+  if(enCours()) arreterRun(t); else demarrerRun(t);
   majRun();
 });
 
+/* ---------- chronométrage : tops départ / arrivée ---------- */
+// Un seul bouton qui alterne départ (vert) et arrivée (rouge) : impossible de taper
+// deux départs de suite ou une arrivée sans départ. Un appui à moins de ANTIREBOND ms
+// du précédent est ignoré. Les tops sont inscrits dans le CSV (colonnes passage et top).
+const ANTIREBOND=800;
+let tops=[], nPass=0, tDep=null, tDernierTop=-1e9, dernier=null, dist=105, tMsg=0;   // dist en dm
+function poserDist(v){
+  dist=Math.max(10,Math.min(1000,Math.round(v/5)*5)); noter("dist",dist);
+  distV.textContent=fr(dist/10,1)+" m"; majTop();
+}
+function majTop(){
+  if(performance.now()<tMsg) return;            // un message est affiché, on le laisse
+  topInfo.classList.remove("alerte");
+  const ouvert=tDep!==null;
+  topBtn.textContent = ouvert ? "Top arrivée n°"+nPass : "Top départ n°"+(enCours()?nPass+1:1);
+  topBtn.classList.toggle("arr",ouvert);
+  topAnnul.hidden = !ouvert;
+  if(ouvert) topInfo.innerHTML="Passage "+nPass+"…<small>"+fr((performance.now()-tDep)/1000,1)+" s</small>";
+  else if(dernier) topInfo.innerHTML="P"+dernier.n+" : "+fr(dernier.d,2)+" s<small>"
+                    +fr(dist/10/dernier.d,3)+" m/s · "+fr(dist/10,1)+" m</small>";
+  else topInfo.innerHTML="Aucun passage<small>base de "+fr(dist/10,1)+" m</small>";
+}
+function message(txt){
+  tMsg=performance.now()+2500; topInfo.classList.add("alerte"); topInfo.innerHTML=txt;
+  setTimeout(majTop,2600);
+}
+function topChrono(){
+  const t=performance.now();
+  if(t-tDernierTop<ANTIREBOND) return;
+  if(tDep===null && !enCours()){
+    // détrompeur : on n'écrase pas un run terminé dont le CSV n'a peut-être pas été pris
+    if(tRun0!==null){ message("Run arrêté<small>démarrer un nouveau run d'abord</small>"); return; }
+    demarrerRun(t);                                // premier top : le run démarre tout seul
+  }
+  tDernierTop=t; tMsg=0;
+  if(tDep===null){
+    nPass++; tDep=t; tops.push([t,"depart",nPass]);
+    if(navigator.vibrate) navigator.vibrate(60);
+  } else {
+    tops.push([t,"arrivee",nPass]);
+    dernier={n:nPass,d:(t-tDep)/1000}; tDep=null;
+    if(navigator.vibrate) navigator.vibrate([60,80,60]);
+  }
+  majTop(); majRun();
+}
+function annulerTop(){
+  if(tDep===null) return;
+  tops=tops.filter(x=>!(x[1]==="depart"&&x[2]===nPass));
+  nPass--; tDep=null; tMsg=0; majTop();
+}
+topBtn.addEventListener("click",topChrono);
+topAnnul.addEventListener("click",annulerTop);
+distM.addEventListener("click",()=>poserDist(dist-5));
+distP.addEventListener("click",()=>poserDist(dist+5));
+setInterval(()=>{ if(tDep!==null) majTop(); },100);
+
 /* ---------- export CSV ---------- */
 // séparateur point-virgule et virgule décimale : s'ouvre directement dans un Excel français
+// colonne passage : num\u00E9ro du passage en cours (entre son d\u00E9part et son arriv\u00E9e), vide sinon
+// colonne top : "depart" ou "arrivee" sur une ligne ajout\u00E9e \u00E0 l'instant exact du top,
+//               qui reprend les derni\u00E8res valeurs mesur\u00E9es
 function csv(){
   const L=bornes(), v=(x,d)=>x.toFixed(d).replace(".",",");
-  let s="\uFEFFt_s;U_V;I_A;P_W;Umax_V;Imax_A;Pmax_W;barre_deg\n";
+  const T=tops.filter(x=>x[0]>=tRun0 && (tRun1===null||x[0]<=tRun1));
+  const passage=t=>{ let p=""; for(const x of T){ if(x[0]>t) break; p = x[1]==="depart" ? x[2] : ""; } return p; };
+  const ligne=(t,e,p,nom)=>v((t-tRun0)/1000,3)+";"+v(e[1],4)+";"+v(e[2],4)+";"+v(e[3],4)
+      +";"+v(e[4],4)+";"+v(e[5],4)+";"+v(e[6],4)+";"+e[7]+";"+p+";"+nom+"\n";
+  let s="\uFEFFt_s;U_V;I_A;P_W;Umax_V;Imax_A;Pmax_W;barre_deg;passage;top\n";
+  let j=0, prec=L.length?L[0]:null;
   for(const e of L){
-    s+=v((e[0]-tRun0)/1000,3)+";"+v(e[1],4)+";"+v(e[2],4)+";"+v(e[3],4)
-      +";"+v(e[4],4)+";"+v(e[5],4)+";"+v(e[6],4)+";"+e[7]+"\n";
+    while(j<T.length && T[j][0]<=e[0]){ s+=ligne(T[j][0],prec,T[j][2],T[j][1]); j++; }
+    s+=ligne(e[0],e,passage(e[0]),"");
+    prec=e;
   }
+  while(prec && j<T.length){ s+=ligne(T[j][0],prec,T[j][2],T[j][1]); j++; }
   return s;
 }
 function nomFichier(){
@@ -721,6 +837,7 @@ document.addEventListener("gesturestart",e=>e.preventDefault());
 poserAmpli(lire("ampli",45));
 poserSens(lire("sens",1));
 poserTrim(lire("trim",0));
+poserDist(lire("dist",105));
 poser(0);
 ajusterMesures();
 majRun();
